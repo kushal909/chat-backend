@@ -17,6 +17,11 @@ const io = new Server(server, {
 
 const users = new Map();
 
+app.get("/gt",(req,res) =>{
+
+  res.json("welcome to get ")
+  
+})
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.id);
 
