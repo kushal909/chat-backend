@@ -2,10 +2,21 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import mongoose  from "mongoose"
 
 const app = express();
 app.use(cors());
+const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/?appName=Cluster1";
 
+// Replace <username> and <password> with your MongoDB Atlas credentials
+// Replace "ecommerce" with your database name (e.g., "chatapp" or "ecommerce")
+
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("✅ MongoDB Connected Successfully"))
+.catch(err => console.error("❌ MongoDB Connection Error:", err));
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -17,9 +28,25 @@ const io = new Server(server, {
 
 const users = new Map();
 
+
+
+const userSchema = new  mongoose.Schema({
+
+  name:String,
+  email:String,
+  password:String,
+  role:String
+})
+
+let User = mongoose.model("user",userSchema)
+app.post("/reg",async(req,res) =>{
+  let usrData = new User(req.body)
+  let usrResult = await usrData.save()
+  res.json(usrResult)
+})
 app.get("/gt",(req,res) =>{
 
-  res.json("welcome to get ")
+  res.json("welcome to get-- ")
   
 })
 io.on("connection", (socket) => {
