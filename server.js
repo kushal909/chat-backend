@@ -95,6 +95,6 @@ io.on("connection", (socket) => {
 });
 
 let  PORT =5000
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT,  () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
