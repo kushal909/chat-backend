@@ -1,7 +1,28 @@
 {
+  "name": "chat-backend",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/kushal909/chat-backend#readme",
+  "bugs": {
+    "url": "https://github.com/kushal909/chat-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kushal909/chat-backend.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "mongoose": "^8.19.3",
     "socket.io": "^4.8.1"
-  }
+  },
+  "devDependencies": {}
 }

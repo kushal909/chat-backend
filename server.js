@@ -9,6 +9,7 @@ const app = express();
 
 app.use(express.json())
 app.use(cors());
+
 const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/?appName=Cluster1";
 
 // Replace <username> and <password> with your MongoDB Atlas credentials
@@ -47,9 +48,11 @@ app.post("/reg",async(req,res) =>{
   let usrResult = await usrData.save()
   res.json(usrResult)
 })
-app.get("/gt",(req,res) =>{
+app.get("/gt",async(req,res) =>{
 
-  res.json("welcome to get-- ")
+  let getData = await User.find()
+  console.log("data",getData)
+  res.json(getData)
   
 })
 io.on("connection", (socket) => {
