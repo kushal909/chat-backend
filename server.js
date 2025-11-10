@@ -59,10 +59,12 @@ io.on("connection", (socket) => {
     // Emit to receiver and sender
     const receiverData = await User.findOne({ username: receiver });
     if (receiverData && receiverData.socketId) {
+      console.log("sender, receiver, message rev",sender, receiver, message)
       io.to(receiverData.socketId).emit("private_message", { sender, receiver, message });
     }
     const senderData = await User.findOne({ username: sender });
     if (senderData && senderData.socketId) {
+            console.log("sender, receiver, message send",sender, receiver, message)
       io.to(senderData.socketId).emit("private_message", { sender, receiver, message });
     }
     console.log(`📩 ${sender} → ${receiver}: ${message}`);
