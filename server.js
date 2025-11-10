@@ -50,26 +50,22 @@ app.post("/reg",async(req,res) =>{
   res.json({message:"registred successfully",usrResult})
 })
 app.get("/gt",async(req,res) =>{
-
   let getData = await User.find()
-  console.log("data",getData)
+
+  console.log("designed and developed by kushal")
+  // console.log("data",getData)
   res.json(getData)
-  
 })
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.id);
-
   socket.on("register", (username) => {
     users.set(username, socket.id);
     console.log(`✅ ${username} registered with id ${socket.id}`);
   });
-
   socket.on("private_message", ({ sender, receiver, message }) => {
     const receiverSocketId = users.get(receiver);
     const senderSocketId = users.get(sender);
-
     const msgData = { sender, receiver, message };
-
     if (receiverSocketId) {
       // Send to receiver
       io.to(receiverSocketId).emit("private_message", msgData);
