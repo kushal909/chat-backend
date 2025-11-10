@@ -45,6 +45,7 @@ io.on("connection", (socket) => {
     const receiverSocketId = users.get(receiver);
     const senderSocketId = users.get(sender);
     const msgData = { sender, receiver, message };
+    console.log("sender, receiver, message",sender, receiver, message)
     if (receiverSocketId) {
       // Send to receiver
       io.to(receiverSocketId).emit("private_message", msgData);
