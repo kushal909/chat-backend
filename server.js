@@ -4,7 +4,10 @@ import { Server } from "socket.io";
 import cors from "cors";
 import mongoose  from "mongoose"
 
+
 const app = express();
+
+app.use(express.json())
 app.use(cors());
 const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/?appName=Cluster1";
 
