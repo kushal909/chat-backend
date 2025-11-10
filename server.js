@@ -2,75 +2,79 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import mongoose  from "mongoose"
-
-
+import mongoose from "mongoose";
 const app = express();
-
-app.use(express.json())
+app.use(express.json());
 app.use(cors());
 
-const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/?appName=Cluster1";
+// -------------------- MongoDB --------------------
+const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/chatapp";
 
-// Replace <username> and <password> with your MongoDB Atlas credentials
-// Replace "ecommerce" with your database name (e.g., "chatapp" or "ecommerce")
+mongoose.connect(mongoURI)
+  .then(() => console.log("✅ MongoDB Connected Successfully"))
+  .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log("✅ MongoDB Connected Successfully"))
-.catch(err => console.error("❌ MongoDB Connection Error:", err));
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: "http://65.2.81.219:3000",
-    methods: ["GET", "POST"],
-  },
+// -------------------- Mongoose Schemas --------------------
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  socketId: String,
 });
+const messageSchema = new mongoose.Schema({
+  sender: { type: String, required: true },
+  receiver: { type: String, required: true },
+  message: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+const User = mongoose.model("User", userSchema);
+const Message = mongoose.model("Message", messageSchema);
 
-const users = new Map();
-
-
-
+// -------------------- HTTP + Socket.IO --------------------
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "http://65.2.81.219:5000", methods: ["GET", "POST"] },
+});
 
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.id);
-  socket.on("register", (username) => {
-    users.set(username, socket.id);
-    console.log(`✅ ${username} registered with id ${socket.id}`);
+  socket.on("register", async (username) => {
+    try {
+      await User.findOneAndUpdate(
+        { username },
+        { socketId: socket.id },
+        { upsert: true }
+      );
+      console.log(`✅ ${username} registered with id ${socket.id}`);
+    } catch (err) {
+      console.error(err);
+    }
   });
-  socket.on("private_message", ({ sender, receiver, message }) => {
-    const receiverSocketId = users.get(receiver);
-    const senderSocketId = users.get(sender);
-    const msgData = { sender, receiver, message };
-    console.log("sender, receiver, message",sender, receiver, message)
-    if (receiverSocketId) {
-      // Send to receiver
-      io.to(receiverSocketId).emit("private_message", msgData);
+  socket.on("private_message", async ({ sender, receiver, message }) => {
+    // Save message to DB
+    try {
+      const msg = new Message({ sender, receiver, message });
+      await msg.save();
+    } catch (err) {
+      console.error("❌ Error saving message:", err);
     }
-
-    // Always send back to sender as well
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("private_message", msgData);
+    // Emit to receiver and sender
+    const receiverData = await User.findOne({ username: receiver });
+    if (receiverData && receiverData.socketId) {
+      io.to(receiverData.socketId).emit("private_message", { sender, receiver, message });
     }
-
+    const senderData = await User.findOne({ username: sender });
+    if (senderData && senderData.socketId) {
+      io.to(senderData.socketId).emit("private_message", { sender, receiver, message });
+    }
     console.log(`📩 ${sender} → ${receiver}: ${message}`);
   });
-
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log("🔴 Disconnected:", socket.id);
-    for (const [username, id] of users.entries()) {
-      if (id === socket.id) {
-        users.delete(username);
-        break;
-      }
-    }
+    await User.findOneAndUpdate({ socketId: socket.id }, { socketId: null });
   });
 });
 
-let  PORT =5000
-server.listen(PORT,  () => {
+// -------------------- Start server --------------------
+const PORT = 5000;
+server.listen(PORT, () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
