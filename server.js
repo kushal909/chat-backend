@@ -44,9 +44,10 @@ const userSchema = new  mongoose.Schema({
 
 let User = mongoose.model("user",userSchema)
 app.post("/reg",async(req,res) =>{
+  console.log("req.body")
   let usrData = new User(req.body)
   let usrResult = await usrData.save()
-  res.json(usrResult)
+  res.json({message:"registred successfully",usrResult})
 })
 app.get("/gt",async(req,res) =>{
 
