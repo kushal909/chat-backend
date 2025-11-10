@@ -34,28 +34,28 @@ const users = new Map();
 
 
 
-const userSchema = new  mongoose.Schema({
+// const userSchema = new  mongoose.Schema({
 
-  name:String,
-  email:String,
-  password:String,
-  role:String
-})
+//   name:String,
+//   email:String,
+//   password:String,
+//   role:String
+// })
 
-let User = mongoose.model("user",userSchema)
-app.post("/reg",async(req,res) =>{
-  console.log("req.body")
-  let usrData = new User(req.body)
-  let usrResult = await usrData.save()
-  res.json({message:"registred successfully",usrResult})
-})
-app.get("/gt",async(req,res) =>{
-  let getData = await User.find()
+// let User = mongoose.model("user",userSchema)
+// app.post("/reg",async(req,res) =>{
+//   console.log("req.body")
+//   let usrData = new User(req.body)
+//   let usrResult = await usrData.save()
+//   res.json({message:"registred successfully",usrResult})
+// })
+// app.get("/gt",async(req,res) =>{
+//   let getData = await User.find()
 
-  console.log("designed and developed by kushal")
-  // console.log("data",getData)
-  res.json(getData)
-})
+//   console.log("designed and developed by kushal")
+//   // console.log("data",getData)
+//   res.json(getData)
+// })
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.id);
   socket.on("register", (username) => {
