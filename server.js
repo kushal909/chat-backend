@@ -1,82 +1,70 @@
+// server.js
 import express from "express";
-import http from "http";
-import { Server } from "socket.io";
-import cors from "cors";
 import mongoose from "mongoose";
+import cors from "cors";
+
 const app = express();
-app.use(express.json());
 app.use(cors());
-
-// -------------------- MongoDB --------------------
+app.use(express.json());
 const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/chatapp";
+// MongoDB connection
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.log(err));
 
-mongoose.connect(mongoURI)
-  .then(() => console.log("✅ MongoDB Connected Successfully"))
-  .catch(err => console.error("❌ MongoDB Connection Error:", err));
-
-// -------------------- Mongoose Schemas --------------------
+// User schema
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  socketId: String,
-});
-const messageSchema = new mongoose.Schema({
-  sender: { type: String, required: true },
-  receiver: { type: String, required: true },
-  message: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now }
-});
+  name: String,
+  email: String,
+  age: Number
+}, { timestamps: true });
+
 const User = mongoose.model("User", userSchema);
-const Message = mongoose.model("Message", messageSchema);
 
-// -------------------- HTTP + Socket.IO --------------------
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "http://65.2.81.219:5000", methods: ["GET", "POST"] },
+// Routes
+
+// CREATE
+app.post("/api/users", async (req, res) => {
+  try {
+    const user = new User(req.body);
+    const savedUser = await user.save();
+    res.status(201).json(savedUser);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 });
 
-io.on("connection", (socket) => {
-  console.log("🟢 User connected:", socket.id);
-  socket.on("register", async (username) => {
-    try {
-      await User.findOneAndUpdate(
-        { username },
-        { socketId: socket.id },
-        { upsert: true }
-      );
-      console.log(`✅ ${username} registered with id ${socket.id}`);
-    } catch (err) {
-      console.error(err);
-    }
-  });
-  socket.on("private_message", async ({ sender, receiver, message }) => {
-    // Save message to DB
-    try {
-      const msg = new Message({ sender, receiver, message });
-      await msg.save();
-    } catch (err) {
-      console.error("❌ Error saving message:", err);
-    }
-    // Emit to receiver and sender
-    const receiverData = await User.findOne({ username: receiver });
-    if (receiverData && receiverData.socketId) {
-      console.log("sender, receiver, message rev",sender, receiver, message)
-      io.to(receiverData.socketId).emit("private_message", { sender, receiver, message });
-    }
-    const senderData = await User.findOne({ username: sender });
-    if (senderData && senderData.socketId) {
-            console.log("sender, receiver, message send",sender, receiver, message)
-      io.to(senderData.socketId).emit("private_message", { sender, receiver, message });
-    }
-    console.log(`📩 ${sender} → ${receiver}: ${message}`);
-  });
-  socket.on("disconnect", async () => {
-    console.log("🔴 Disconnected:", socket.id);
-    await User.findOneAndUpdate({ socketId: socket.id }, { socketId: null });
-  });
+// READ ALL
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-// -------------------- Start server --------------------
-const PORT = 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
+// UPDATE
+app.put("/api/users/:id", async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 });
+
+// DELETE
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: "User deleted" });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+app.listen(5000, () => console.log("Server running on port 5000"));
