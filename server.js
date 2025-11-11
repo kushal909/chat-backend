@@ -2,12 +2,12 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-
 const app = express();
 app.use(cors());
 app.use(express.json());
-const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/chatapp";
+const mongoURI = "mongodb+srv://kushalukumar909:JqUZTHivXaqyKcht@cluster1.zryphag.mongodb.net/crud";
 // MongoDB connection
+//const mongoURI ="mongodb://localhost:27017/chatdb"
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -30,9 +30,13 @@ const User = mongoose.model("User", userSchema);
 app.post("/api/users", async (req, res) => {
   try {
     const user = new User(req.body);
+
+    console.log("rw",req.body)
+    console.log("us",user)
     const savedUser = await user.save();
     res.status(201).json(savedUser);
   } catch (err) {
+    console.log("err",err)
     res.status(400).json({ message: err.message });
   }
 });
